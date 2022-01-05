@@ -8,12 +8,22 @@ from random import randrange
 # Создание поля
 pygame.init()
 pygame.display.set_caption('Arcanoid')
-size = width, height = 570, 400
+size = width, height = 570, 600
 screen = pygame.display.set_mode(size)
 fps = 60
 
-# переменная для предотвращения многократного отскока
-st_y1 = 0
+# музыка
+pygame.mixer.music.load("music/soundforgame.mp3")
+pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.play(-1)
+stopmusic = True
+
+kick = pygame.mixer.Sound("music/kick.mp3")
+
+# графика для анимации конца игры
+all_sprites = pygame.sprite.Group()
+im_x = -600
+v = 200
 
 
 def load_image(name):  # load image
@@ -25,12 +35,29 @@ def load_image(name):  # load image
     return image
 
 
+class Bit(pygame.sprite.Sprite):
+    imager = load_image("gameover.png")
+
+    def __init__(self, group):
+        super().__init__(group)
+        self.image = Bit.imager
+        self.rect = self.image.get_rect()
+        self.rect.x = -600
+        self.rect.y = 150
+
+    def update(self):
+        self.rect.x = im_x
+
+
+# переменная для предотвращения многократного отскока
+st_y1 = 0
+
 # создание подвижной платформы-doska и шарика
 
 doska_w = 100
 doska_h = 20
 doska_speed = 10
-doska = pygame.Rect(250, 360, doska_w, doska_h)
+doska = pygame.Rect(250, 570, doska_w, doska_h)
 
 ball_radius = 10
 ball_speed = 3
@@ -57,7 +84,7 @@ def collide():
     if ball.x >= 554 or ball.x <= 8:
         dx = -dx
 
-    if ball.y < 5 or ball.y >= 378:
+    if ball.y < 5:
         dy = -dy
 
     # отскок шарика от платформы
@@ -73,10 +100,25 @@ def collide():
 
         st_y1 = ball.y - 50
 
+
+def block_collid(dx, dy, ball, rect):
     # отскок от плиток
-    for block in blocks:
-        if pygame.Rect.colliderect(block, ball):
-            dy = -dy
+    if dx > 0:
+        delta_x = ball.right - rect.left
+    else:
+        delta_x = rect.right - ball.left
+    if dy > 0:
+        delta_y = ball.bottom - rect.top
+    else:
+        delta_y = rect.bottom - ball.top
+
+    if abs(delta_x - delta_y) < 10:
+        dx, dy = -dx, -dy
+    elif delta_x > delta_y:
+        dy = -dy
+    elif delta_y > delta_x:
+        dx = -dx
+    return dx, dy
 
 
 if __name__ == '__main__':
@@ -87,7 +129,6 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
         screen.fill('black')
 
         # создание объектов
@@ -98,17 +139,65 @@ if __name__ == '__main__':
         # движение шарика
         ball_update()
 
-        # отскок шарика
+        # отскок шарика от стенок и платформы
         collide()
+
+        # отскок шарика от блоков
+        hit_index = ball.collidelist(blocks)
+        if hit_index != -1:
+            hit_rect = blocks.pop(hit_index)
+            hit_color = colors.pop(hit_index)
+            dx, dy = block_collid(dx, dy, ball, hit_rect)
+            kick.play()
+
+            # эффект исчезновения блока
+            hit_rect.inflate_ip(ball.width * 3, ball.height * 3)
+            pygame.draw.rect(screen, hit_color, hit_rect)
 
         # управление
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT] and doska.left > 0:
             doska.left -= doska_speed
+
         if key[pygame.K_RIGHT] and doska.right < 570:
             doska.right += doska_speed
+
+        # Остановка и продолжение музыки по кнопке "пробел"
+        if key[pygame.K_SPACE]:
+            stopmusic = not stopmusic
+            if stopmusic:
+                pygame.mixer.music.pause()
+            else:
+                pygame.mixer.music.unpause()
+
+        # проверка на проигрыш
+        if ball.y > 570:
+            break
 
         # обновление экрана
         pygame.display.flip()
         clock.tick(fps)
+    # анимация конца игры
+    finishing = True
+    Bit(all_sprites)
+    while finishing:
+        screen.fill('black')
+        all_sprites.draw(screen)
+        d = clock.tick() * v / 1000
+        im_x += d
+        print(im_x)
+        all_sprites.update()
+        if im_x >= -15:
+            finishing = False
+
+        # обновление экрана
+        pygame.display.flip()
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        all_sprites.draw(screen)
+        pygame.display.flip()
+    # выход
     pygame.quit()
