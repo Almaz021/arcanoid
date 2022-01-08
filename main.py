@@ -121,8 +121,59 @@ def block_collid(dx, dy, ball, rect):
     return dx, dy
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+# Стартовое окно
+def start_screen():
+    clock1 = pygame.time.Clock()
+    intro_text = ["ARKANOID", "Начать игру", "Выход"]
+    font = pygame.font.Font(None, 60)
+    string_rendered = font.render(intro_text[0], True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 160
+    intro_rect.x = 170
+    screen.blit(string_rendered, intro_rect)
+
+    # кнопка начала игры
+    font = pygame.font.Font(None, 40)
+    button = font.render(intro_text[1], True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 280
+    intro_rect.x = 200
+    screen.blit(button, intro_rect)
+    btn = pygame.Rect(181, 276, 200, 35)
+
+    # кнопка выхода
+    button1 = font.render(intro_text[2], True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 350
+    intro_rect.x = 235
+    screen.blit(button1, intro_rect)
+    btn1 = pygame.Rect(181, 346, 200, 35)
+
+    while True:
+        for event1 in pygame.event.get():
+            if event1.type == pygame.QUIT:
+                terminate()
+            elif event1.type == pygame.MOUSEBUTTONDOWN:
+                if btn.collidepoint(event1.pos):
+                    print(1)
+                    return
+                elif btn1.collidepoint(event1.pos):
+                    terminate()
+            pygame.draw.rect(screen, (255, 255, 255), btn, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn1, 1)
+        pygame.display.flip()
+        clock1.tick(fps)
+
+
 if __name__ == '__main__':
+    start_screen()
     running = True
+    finishing = False
     clock = pygame.time.Clock()
     # игровой цикл
     while running:
@@ -172,20 +223,20 @@ if __name__ == '__main__':
 
         # проверка на проигрыш
         if ball.y > 570:
+            finishing = True
             break
 
         # обновление экрана
+        all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
     # анимация конца игры
-    finishing = True
     Bit(all_sprites)
     while finishing:
         screen.fill('black')
         all_sprites.draw(screen)
         d = clock.tick() * v / 1000
         im_x += d
-        print(im_x)
         all_sprites.update()
         if im_x >= -15:
             finishing = False
@@ -197,7 +248,5 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        all_sprites.draw(screen)
-        pygame.display.flip()
     # выход
     pygame.quit()
