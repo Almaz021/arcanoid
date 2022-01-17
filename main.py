@@ -171,6 +171,7 @@ def start_screen():
 
 
 if __name__ == '__main__':
+    print(pygame.font.get_fonts())
     start_screen()
     running = True
     finishing = False
@@ -213,6 +214,7 @@ if __name__ == '__main__':
         if key[pygame.K_RIGHT] and doska.right < 570:
             doska.right += doska_speed
 
+
         # Остановка и продолжение музыки по кнопке "пробел"
         if key[pygame.K_SPACE]:
             stopmusic = not stopmusic
@@ -221,8 +223,11 @@ if __name__ == '__main__':
             else:
                 pygame.mixer.music.unpause()
 
-        # проверка на проигрыш
+        # проверка на проигрыш или выигрыш
         if ball.y > 570:
+            finishing = True
+            break
+        if not blocks:
             finishing = True
             break
 
@@ -232,6 +237,18 @@ if __name__ == '__main__':
         clock.tick(fps)
     # анимация конца игры
     Bit(all_sprites)
+
+    # создание шрифта
+    basicFont = pygame.font.SysFont('georgia', 48)
+    if blocks:
+        text = basicFont.render('Вы проиграли', True, 'white', None)
+    else:
+        text = basicFont.render('Вы выиграли', True, 'white', None)
+    textRect = text.get_rect()
+    textRect.centerx = screen.get_rect().centerx
+    textRect.centery = screen.get_rect().centery
+
+
     while finishing:
         screen.fill('black')
         all_sprites.draw(screen)
@@ -245,8 +262,11 @@ if __name__ == '__main__':
         pygame.display.flip()
 
     while running:
+        screen.blit(text, textRect)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        pygame.display.update()
     # выход
     pygame.quit()
+
