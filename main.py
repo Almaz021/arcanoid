@@ -1,13 +1,13 @@
-import random
-
-import pygame
 import os
+import random
 import sys
 from random import randrange
 
+import pygame
+
 # Создание поля
 pygame.init()
-pygame.display.set_caption('Arcanoid')
+pygame.display.set_caption('Arkanoid')
 size = width, height = 570, 600
 screen = pygame.display.set_mode(size)
 fps = 60
@@ -19,11 +19,6 @@ pygame.mixer.music.play(-1)
 stopmusic = True
 
 kick = pygame.mixer.Sound("music/kick.mp3")
-
-# графика для анимации конца игры
-all_sprites = pygame.sprite.Group()
-im_x = -600
-v = 200
 
 
 def load_image(name):  # load image
@@ -52,25 +47,6 @@ class Bit(pygame.sprite.Sprite):
 # переменная для предотвращения многократного отскока
 st_y1 = 0
 
-# создание подвижной платформы-doska и шарика
-
-doska_w = 100
-doska_h = 20
-doska_speed = 10
-doska = pygame.Rect(250, 570, doska_w, doska_h)
-
-ball_radius = 10
-ball_speed = 3
-ball_rect = int(ball_radius * 2 ** 0.5)
-ball = pygame.Rect(290, 335, ball_rect, ball_rect)
-
-# направления движения шарика по осям x,y
-dx = 1
-dy = -1
-# создание блоков
-blocks = [pygame.Rect(10 + 70 * i, 10 + 50 * j, 60, 40) for i in range(8) for j in range(5)]
-colors = [(randrange(30, 255), randrange(30, 255), randrange(30, 255)) for i in range(8) for j in range(5)]
-
 
 def ball_update():
     ball.x += ball_speed * dx
@@ -93,9 +69,9 @@ def collide():
 
     if pygame.Rect.colliderect(ball, doska) and st_y1 == -1:
         dy = -dy
-        a = random.randint(0, 1)
+        a = random.randint(0, 9)
 
-        if a and ball.x > 7:
+        if not a and ball.x > 7:
             dx = -dx
 
         st_y1 = ball.y - 50
@@ -128,6 +104,7 @@ def terminate():
 
 # Стартовое окно
 def start_screen():
+    screen.fill((0, 0, 0))
     clock1 = pygame.time.Clock()
     intro_text = ["ARKANOID", "Начать игру", "Выход"]
     font = pygame.font.Font(None, 60)
@@ -160,8 +137,7 @@ def start_screen():
                 terminate()
             elif event1.type == pygame.MOUSEBUTTONDOWN:
                 if btn.collidepoint(event1.pos):
-                    print(1)
-                    return
+                    return True
                 elif btn1.collidepoint(event1.pos):
                     terminate()
             pygame.draw.rect(screen, (255, 255, 255), btn, 1)
@@ -171,102 +147,146 @@ def start_screen():
 
 
 if __name__ == '__main__':
-    print(pygame.font.get_fonts())
-    start_screen()
     running = True
     finishing = False
     clock = pygame.time.Clock()
+    mouse_button = (0, 0)
+    start_pressed = False
+
     # игровой цикл
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        screen.fill('black')
+    while True:
+        stop = True
+        start_pressed = start_screen()
+        # графика для анимации конца игры
+        all_sprites = pygame.sprite.Group()
+        im_x = -600
+        v = 200
+        # создание подвижной платформы-doska и шарика
 
-        # создание объектов
-        [pygame.draw.rect(screen, colors[color], block) for color, block in enumerate(blocks)]
-        pygame.draw.rect(screen, 'blue', doska)
-        pygame.draw.circle(screen, 'white', ball.center, ball_radius)
+        doska_w = 100
+        doska_h = 20
+        doska_speed = 10
+        doska = pygame.Rect(250, 570, doska_w, doska_h)
 
-        # движение шарика
-        ball_update()
+        ball_radius = 10
+        ball_speed = 3
+        ball_rect = int(ball_radius * 2 ** 0.5)
+        ball = pygame.Rect(290, 335, ball_rect, ball_rect)
 
-        # отскок шарика от стенок и платформы
-        collide()
+        # направления движения шарика по осям x,y
+        dx = 1
+        dy = -1
+        # создание блоков
+        blocks = [pygame.Rect(10 + 70 * i, 10 + 50 * j, 60, 40) for i in range(8) for j in range(5)]
+        colors = [(randrange(30, 255), randrange(30, 255), randrange(30, 255)) for i in range(8) for j in range(5)]
 
-        # отскок шарика от блоков
-        hit_index = ball.collidelist(blocks)
-        if hit_index != -1:
-            hit_rect = blocks.pop(hit_index)
-            hit_color = colors.pop(hit_index)
-            dx, dy = block_collid(dx, dy, ball, hit_rect)
-            kick.play()
+        new_game = True
 
-            # эффект исчезновения блока
-            hit_rect.inflate_ip(ball.width * 3, ball.height * 3)
-            pygame.draw.rect(screen, hit_color, hit_rect)
+        while True:
+            if new_game is False:
+                break
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+            screen.fill('black')
+            [pygame.draw.rect(screen, colors[color], block) for color, block in enumerate(blocks)]
+            pygame.draw.rect(screen, 'blue', doska)
+            pygame.draw.circle(screen, 'white', ball.center, ball_radius)
 
-        # управление
-        key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT] and doska.left > 0:
-            doska.left -= doska_speed
+            # движение шарика
+            ball_update()
 
-        if key[pygame.K_RIGHT] and doska.right < 570:
-            doska.right += doska_speed
+            # отскок шарика от стенок и платформы
+            collide()
 
+            # отскок шарика от блоков
+            hit_index = ball.collidelist(blocks)
+            if hit_index != -1:
+                hit_rect = blocks.pop(hit_index)
+                hit_color = colors.pop(hit_index)
+                dx, dy = block_collid(dx, dy, ball, hit_rect)
+                kick.play()
 
-        # Остановка и продолжение музыки по кнопке "пробел"
-        if key[pygame.K_SPACE]:
-            stopmusic = not stopmusic
-            if stopmusic:
-                pygame.mixer.music.pause()
-            else:
-                pygame.mixer.music.unpause()
+                # эффект исчезновения блока
+                hit_rect.inflate_ip(ball.width * 3, ball.height * 3)
+                pygame.draw.rect(screen, hit_color, hit_rect)
 
-        # проверка на проигрыш или выигрыш
-        if ball.y > 570:
-            finishing = True
-            break
-        if not blocks:
-            finishing = True
-            break
+            # управление
+            key = pygame.key.get_pressed()
+            if key[pygame.K_LEFT] and doska.left > 0:
+                doska.left -= doska_speed
 
-        # обновление экрана
-        all_sprites.draw(screen)
-        pygame.display.flip()
-        clock.tick(fps)
-    # анимация конца игры
-    Bit(all_sprites)
+            if key[pygame.K_RIGHT] and doska.right < 570:
+                doska.right += doska_speed
 
-    # создание шрифта
-    basicFont = pygame.font.SysFont('georgia', 48)
-    if blocks:
-        text = basicFont.render('Вы проиграли', True, 'white', None)
-    else:
-        text = basicFont.render('Вы выиграли', True, 'white', None)
-    textRect = text.get_rect()
-    textRect.centerx = screen.get_rect().centerx
-    textRect.centery = screen.get_rect().centery
+            # Остановка и продолжение музыки по кнопке "пробел"
+            if key[pygame.K_SPACE]:
+                stopmusic = not stopmusic
+                if stopmusic:
+                    pygame.mixer.music.pause()
+                else:
+                    pygame.mixer.music.unpause()
 
+            # проверка на проигрыш или выигрыш
+            if ball.y > 570:
+                finishing = True
+                new_game = False
+                break
+            if not blocks:
+                finishing = True
+                new_game = False
+                break
 
-    while finishing:
-        screen.fill('black')
-        all_sprites.draw(screen)
-        d = clock.tick() * v / 1000
-        im_x += d
-        all_sprites.update()
-        if im_x >= -15:
-            finishing = False
+            # обновление экрана
+            all_sprites.draw(screen)
+            pygame.display.flip()
+            clock.tick(fps)
 
-        # обновление экрана
-        pygame.display.flip()
+        # анимация конца игры
+        Bit(all_sprites)
 
-    while running:
-        screen.blit(text, textRect)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        pygame.display.update()
-    # выход
-    pygame.quit()
+        # создание шрифта
+        basicFont = pygame.font.SysFont('georgia', 48)
+        if blocks:
+            text = basicFont.render('Вы проиграли!', True, 'white', None)
+        else:
+            text = basicFont.render('Вы выиграли!', True, 'white', None)
 
+        while finishing:
+            screen.fill('black')
+            all_sprites.draw(screen)
+            d = clock.tick() * v / 1000
+            im_x += d
+            all_sprites.update()
+
+            if im_x >= -15:
+                finishing = False
+
+            # обновление экрана
+            pygame.display.flip()
+        textRect = text.get_rect()
+        textRect.centerx = screen.get_rect().centerx
+        textRect.centery = screen.get_rect().centery - 200
+        # кнопка выхода
+        font = pygame.font.Font(None, 40)
+        text1 = ["Новая игра"]
+        string_rendered = font.render(text1[0], True, pygame.Color('white'))
+        button = font.render(text1[0], True, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.top = 487
+        intro_rect.x = 203
+        screen.blit(button, intro_rect)
+        btn = pygame.Rect(180, 480, 200, 35)
+
+        while stop:
+            screen.blit(text, textRect)
+            pygame.draw.rect(screen, (255, 255, 255), btn, 1)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if btn.collidepoint(event.pos):
+                        for i in all_sprites:
+                            i.kill()
+                        stop = False
+            pygame.display.flip()
