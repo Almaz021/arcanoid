@@ -68,6 +68,7 @@ def collide():
 
     if pygame.Rect.colliderect(ball, doska) and st_y1 == -1:
         dy = -dy
+        kick.play()
 
         if ball.x > 7:
             dx = dx
@@ -102,9 +103,10 @@ def terminate():
 
 # Стартовое окно
 def start_screen():
+    global stopmusic
     screen.fill((0, 0, 0))
     clock1 = pygame.time.Clock()
-    intro_text = ["ARKANOID", "Новая игра", "Выход"]
+    intro_text = ["ARKANOID", "Новая игра", "Выход", "Выключить звук", "Включить звук"]
     font = pygame.font.Font(None, 60)
     string_rendered = font.render(intro_text[0], True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
@@ -129,6 +131,15 @@ def start_screen():
     screen.blit(button1, intro_rect)
     btn1 = pygame.Rect(181, 346, 200, 35)
 
+    # кнопка выключения звука
+    font2 = pygame.font.Font(None, 33)
+    button2 = font2.render(intro_text[3], True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 422
+    intro_rect.centerx = 304
+    screen.blit(button2, intro_rect)
+    btn2 = pygame.Rect(181, 416, 200, 35)
+
     while True:
         for event1 in pygame.event.get():
             if event1.type == pygame.QUIT:
@@ -138,8 +149,27 @@ def start_screen():
                     return True
                 elif btn1.collidepoint(event1.pos):
                     terminate()
+                elif btn2.collidepoint(event1.pos):
+                    intro_rect = string_rendered.get_rect()
+                    intro_rect.top = 422
+                    intro_rect.centerx = 304
+                    if stopmusic:
+                        pygame.mixer.music.pause()
+                        button2.fill("black")
+                        screen.blit(button2, intro_rect)
+                        button2 = font2.render(intro_text[4], True, pygame.Color('white'))
+                        stopmusic = False
+                    else:
+                        stopmusic = True
+                        pygame.mixer.music.unpause()
+                        button2.fill("black")
+                        screen.blit(button2, intro_rect)
+                        button2 = font2.render(intro_text[3], True, pygame.Color('white'))
+                screen.blit(button2, intro_rect)
+
             pygame.draw.rect(screen, (255, 255, 255), btn, 1)
             pygame.draw.rect(screen, (255, 255, 255), btn1, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn2, 1)
         pygame.display.flip()
         clock1.tick(fps)
 
@@ -147,7 +177,6 @@ def start_screen():
 def levels():
     screen.fill((0, 0, 0))
     clock1 = pygame.time.Clock()
-
     font = pygame.font.Font(None, 60)
     string_rendered = font.render("Уровни", True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
@@ -250,10 +279,10 @@ if __name__ == '__main__':
         v = 200
         # создание подвижной платформы-doska и шарика
 
-        doska_w = 100
-        doska_h = 20
+        doska_x = 100
+        doska_y = 20
         doska_speed = 10
-        doska = pygame.Rect(250, 570, doska_w, doska_h)
+        doska = pygame.Rect(250, 570, doska_x, doska_y)
 
         ball_radius = 10
         ball_speed = 3
@@ -345,6 +374,7 @@ if __name__ == '__main__':
             text = basicFont.render('Вы выиграли!', True, 'white', None)
 
         while finishing:
+
             screen.fill('black')
             all_sprites.draw(screen)
             d = clock.tick() * v / 1000
