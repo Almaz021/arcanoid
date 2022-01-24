@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 from random import randrange
 
@@ -69,10 +68,9 @@ def collide():
 
     if pygame.Rect.colliderect(ball, doska) and st_y1 == -1:
         dy = -dy
-        a = random.randint(0, 9)
 
-        if not a and ball.x > 7:
-            dx = -dx
+        if ball.x > 7:
+            dx = dx
 
         st_y1 = ball.y - 50
 
@@ -106,7 +104,7 @@ def terminate():
 def start_screen():
     screen.fill((0, 0, 0))
     clock1 = pygame.time.Clock()
-    intro_text = ["ARKANOID", "Начать игру", "Выход"]
+    intro_text = ["ARKANOID", "Новая игра", "Выход"]
     font = pygame.font.Font(None, 60)
     string_rendered = font.render(intro_text[0], True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
@@ -119,7 +117,7 @@ def start_screen():
     button = font.render(intro_text[1], True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
     intro_rect.top = 280
-    intro_rect.x = 200
+    intro_rect.x = 205
     screen.blit(button, intro_rect)
     btn = pygame.Rect(181, 276, 200, 35)
 
@@ -146,6 +144,88 @@ def start_screen():
         clock1.tick(fps)
 
 
+def levels():
+    screen.fill((0, 0, 0))
+    clock1 = pygame.time.Clock()
+
+    font = pygame.font.Font(None, 60)
+    string_rendered = font.render("Уровни", True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 80
+    intro_rect.x = 210
+    screen.blit(string_rendered, intro_rect)
+
+    intro_text = ["Уровень 1", "Уровень 2", "Уровень 3", "Уровень 4", "Уровень 5"]
+    font = pygame.font.Font(None, 40)
+    button = font.render(intro_text[0], True, pygame.Color('white'))
+    intro_rect = button.get_rect()
+    intro_rect.top = 160
+    intro_rect.x = 220
+    screen.blit(button, intro_rect)
+    btn = pygame.Rect(185, 155, 200, 35)
+
+    # кнопки уровней
+    font = pygame.font.Font(None, 40)
+    button1 = font.render(intro_text[1], True, pygame.Color('white'))
+    intro_rect = button1.get_rect()
+    intro_rect.top = 240
+    intro_rect.x = 220
+    screen.blit(button1, intro_rect)
+    btn1 = pygame.Rect(185, 235, 200, 35)
+
+    button2 = font.render(intro_text[2], True, pygame.Color('white'))
+    intro_rect = button2.get_rect()
+    intro_rect.top = 320
+    intro_rect.x = 220
+    screen.blit(button2, intro_rect)
+    btn2 = pygame.Rect(185, 315, 200, 35)
+
+    button3 = font.render(intro_text[3], True, pygame.Color('white'))
+    intro_rect = button3.get_rect()
+    intro_rect.top = 400
+    intro_rect.x = 220
+    screen.blit(button3, intro_rect)
+    btn3 = pygame.Rect(185, 395, 200, 35)
+
+    button4 = font.render(intro_text[4], True, pygame.Color('white'))
+    intro_rect = button4.get_rect()
+    intro_rect.top = 480
+    intro_rect.x = 220
+    screen.blit(button4, intro_rect)
+    btn4 = pygame.Rect(185, 475, 200, 35)
+
+    while True:
+        for event1 in pygame.event.get():
+            if event1.type == pygame.QUIT:
+                terminate()
+            elif event1.type == pygame.MOUSEBUTTONDOWN:
+                if btn.collidepoint(event1.pos):
+                    return 1
+                elif btn1.collidepoint(event1.pos):
+                    return 2
+                elif btn2.collidepoint(event1.pos):
+                    return 3
+                elif btn3.collidepoint(event1.pos):
+                    return 4
+                elif btn4.collidepoint(event1.pos):
+                    return 5
+            pygame.draw.rect(screen, (255, 255, 255), btn, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn1, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn2, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn3, 1)
+            pygame.draw.rect(screen, (255, 255, 255), btn4, 1)
+        pygame.display.flip()
+        clock1.tick(fps)
+
+
+def load_level(num):
+    file = open("levels/level_{}.txt".format(num), 'r').readlines()
+    blocks = []
+    for i in file:
+        blocks.append(i.strip())
+    return blocks
+
+
 if __name__ == '__main__':
     running = True
     finishing = False
@@ -153,10 +233,17 @@ if __name__ == '__main__':
     mouse_button = (0, 0)
     start_pressed = False
 
+    # запуск стартового окна
+    start_screen()
+
     # игровой цикл
     while True:
         stop = True
-        start_pressed = start_screen()
+
+        # выбор уровня
+        level_num = levels()
+        level_blocks = load_level(level_num)
+        print(level_blocks)
         # графика для анимации конца игры
         all_sprites = pygame.sprite.Group()
         im_x = -600
@@ -177,7 +264,12 @@ if __name__ == '__main__':
         dx = 1
         dy = -1
         # создание блоков
-        blocks = [pygame.Rect(10 + 70 * i, 10 + 50 * j, 60, 40) for i in range(8) for j in range(5)]
+        blocks = []
+        for i in range(len(level_blocks)):
+            for j in range(len(level_blocks[i])):
+                if level_blocks[i][j] == '0':
+                    blocks.append(pygame.Rect(10 + 70 * j, 10 + 50 * i, 60, 40))
+
         colors = [(randrange(30, 255), randrange(30, 255), randrange(30, 255)) for i in range(8) for j in range(5)]
 
         new_game = True
