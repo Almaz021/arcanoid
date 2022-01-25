@@ -107,6 +107,7 @@ def start_screen():
     screen.fill((0, 0, 0))
     clock1 = pygame.time.Clock()
     intro_text = ["ARKANOID", "Новая игра", "Выход", "Выключить звук", "Включить звук"]
+
     font = pygame.font.Font(None, 60)
     string_rendered = font.render(intro_text[0], True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
@@ -273,6 +274,12 @@ if __name__ == '__main__':
         level_num = levels()
         level_blocks = load_level(level_num)
         print(level_blocks)
+        SCORE = 0
+        scorefont = pygame.font.Font(None, 100)
+        writethescore = scorefont.render(str(SCORE), True, pygame.Color('white'))
+        score_rect = writethescore.get_rect()
+        score_rect.centerx = 285
+        score_rect.centery = 500
         # графика для анимации конца игры
         all_sprites = pygame.sprite.Group()
         im_x = -600
@@ -299,7 +306,7 @@ if __name__ == '__main__':
                 if level_blocks[i][j] == '0':
                     blocks.append(pygame.Rect(10 + 70 * j, 10 + 50 * i, 60, 40))
 
-        colors = [(randrange(30, 255), randrange(30, 255), randrange(30, 255)) for i in range(8) for j in range(5)]
+        colors = [(randrange(100, 255), randrange(100, 255), randrange(100, 255)) for i in range(8) for j in range(5)]
 
         new_game = True
 
@@ -331,6 +338,12 @@ if __name__ == '__main__':
                 # эффект исчезновения блока
                 hit_rect.inflate_ip(ball.width * 3, ball.height * 3)
                 pygame.draw.rect(screen, hit_color, hit_rect)
+                SCORE += 1
+                writethescore = scorefont.render(str(SCORE), True, (255, 255, 255, 64))
+                score_rect = writethescore.get_rect()
+                score_rect.centerx = 285
+                score_rect.centery = 500
+            screen.blit(writethescore, score_rect)
 
             # управление
             key = pygame.key.get_pressed()
@@ -389,6 +402,7 @@ if __name__ == '__main__':
         textRect = text.get_rect()
         textRect.centerx = screen.get_rect().centerx
         textRect.centery = screen.get_rect().centery - 200
+
         # кнопка выхода
         font = pygame.font.Font(None, 40)
         text1 = ["Новая игра"]
@@ -402,6 +416,11 @@ if __name__ == '__main__':
 
         while stop:
             screen.blit(text, textRect)
+            writethescore = scorefont.render("Счёт: " + str(SCORE), True, (255, 255, 255, 64))
+            score_rect = writethescore.get_rect()
+            score_rect.centerx = 285
+            score_rect.centery = 440
+            screen.blit(writethescore, score_rect)
             pygame.draw.rect(screen, (255, 255, 255), btn, 1)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
