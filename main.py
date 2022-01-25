@@ -315,7 +315,7 @@ if __name__ == '__main__':
                 break
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    exit()
+                    terminate()
             screen.fill('black')
             [pygame.draw.rect(screen, colors[color], block) for color, block in enumerate(blocks)]
             pygame.draw.rect(screen, 'blue', doska)
@@ -424,7 +424,7 @@ if __name__ == '__main__':
             pygame.draw.rect(screen, (255, 255, 255), btn, 1)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    exit()
+                    terminate()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if btn.collidepoint(event.pos):
                         for i in all_sprites:
